@@ -207,11 +207,15 @@ func (k Keeper) SetAutomaticWithdraw(ctx sdk.Context, autoW bool) error {
 }
 
 // IsDailyWithdrawBlock control if height is the daily withdraw block
+// BPD.Int64() return -8061083817814786048
+// But it would have to return 12960 (--> HoursPerDay * MinutesPerHour * BlocksPerMinute --> 24 * 60 * 9 )
+// Using RoundInt64() instead of Int64() it's work but RoundInt64() panics if something goes wrong...we may not use it
 func (k Keeper) IsDailyWithdrawBlock(height int64) bool {
-	rest := height % (BPD.Int64() + 2)
-	//rest := height % (10 + 2)
-	if rest > 0 {
+	if height == 0 {
 		return false
 	}
-	return true
+
+	rest := height % BPD.Int64()
+	
+	return rest == 0
 }

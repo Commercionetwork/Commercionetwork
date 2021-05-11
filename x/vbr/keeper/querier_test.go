@@ -39,7 +39,7 @@ func TestQuerier_queryRewardRate(t *testing.T) {
 	require.Equal(t, sdk.NewDec(2), rate)
 }
 
-func TestQuerier_queryFreezePeriod(t *testing.T) {
+func TestQuerier_queryAutomaticWithdraw(t *testing.T) {
 	_, ctx, k, _, _, _ := SetupTestInput(false)
 	require.NoError(t, k.SetAutomaticWithdraw(ctx, true))
 	querier := NewQuerier(k)

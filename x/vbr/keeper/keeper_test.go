@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/commercionetwork/commercionetwork/x/vbr/types"
+	//"github.com/cosmos/cosmos-sdk/x/staking"
 )
 
 // -------------
@@ -189,8 +190,8 @@ func TestKeeper_DistributeBlockRewards(t *testing.T) {
 	}
 }
 
-/*
-func TestKeeper_WithdrawAllRewards(t *testing.T) {
+
+/*func TestKeeper_WithdrawAllRewards(t *testing.T) {
 	tests := []struct {
 		name            string
 		bonded          sdk.Int
@@ -234,7 +235,7 @@ func TestKeeper_WithdrawAllRewards(t *testing.T) {
 			//delegationVal := stakingTypes.NewDelegation(sdk.AccAddress(valAddrVal), valAddrVal, sdk.NewDec(1000))
 
 			fmt.Println("----- delegation info xxx-----")
-			delegationVal := stakingTypes.NewDelegation(sdk.AccAddress(valAddrVal), valAddrVal, sdk.NewDec(1000))
+			delegationVal := staking.NewDelegation(sdk.AccAddress(valAddrVal), valAddrVal, sdk.NewDec(1000))
 			sk.SetDelegation(ctx, delegationVal)
 			fmt.Println(delegationVal)
 
@@ -242,7 +243,7 @@ func TestKeeper_WithdrawAllRewards(t *testing.T) {
 
 			//dist.Keeper.SetDelegatorStartingInfo(ctx, valAddrVal, dist.NewDelegatorStartingInfo(0, sdk.NewDec(0), 1))
 
-			delegation := stakingTypes.NewDelegation(valDelAddr, valAddrVal, sdk.NewDec(1000))
+			delegation := staking.NewDelegation(valDelAddr, valAddrVal, sdk.NewDec(1000))
 			sk.SetDelegation(ctx, delegation)
 			fmt.Println(delegation)
 
@@ -254,7 +255,7 @@ func TestKeeper_WithdrawAllRewards(t *testing.T) {
 			previousPeriod := k.distKeeper.GetValidatorCurrentRewards(ctx, valAddrVal).Period - 1
 
 			stake := testVal.TokensFromSharesTruncated(delegationVal.GetShares())
-			k.distKeeper.SetDelegatorStartingInfo(ctx, valAddr, sdk.AccAddress(valAddrVal), distTypes.NewDelegatorStartingInfo(previousPeriod, stake, uint64(ctx.BlockHeight())))
+			k.distKeeper.SetDelegatorStartingInfo(ctx, valAddr, sdk.AccAddress(valAddrVal), dist.NewDelegatorStartingInfo(previousPeriod, stake, uint64(ctx.BlockHeight())))
 
 			validatorOutstandingRewards := sdk.NewDecCoins(sdk.NewDecCoinFromDec("stake", reward))
 			k.distKeeper.SetValidatorOutstandingRewards(ctx, valAddrVal, validatorOutstandingRewards)
@@ -330,4 +331,148 @@ func TestKeeper_MintVBRTokens(t *testing.T) {
 			require.True(t, macc.GetCoins().IsEqual(tt.wantAmount))
 		})
 	}
+}
+
+//NOT WORKING
+//panic --> GetValidatorHistoricalRewards not correctly inizializzed
+/*func TestKeeper_WithdrawAllRewards(t *testing.T){
+	tests := []struct {
+		name            string
+		bonded          sdk.Int
+		rewardStr       string
+		commisionStr    string
+	}{
+		{
+			name:            "Reward",
+			bonded:          sdk.NewInt(100000000),
+			rewardStr:       "10.1",
+			commisionStr:    "1",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			_, ctx, k, _, bk, sk := SetupTestInput(false)
+			
+			reward, _ := sdk.NewDecFromStr(tt.rewardStr)
+			commision, _ := sdk.NewDecFromStr(tt.commisionStr)
+
+			testVal := TestValidator.UpdateStatus(sdk.Bonded)
+			testVal, _ = testVal.AddTokensFromDel(tt.bonded)
+
+			bk.SetCoins(ctx, valDelAddr, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100000000000))))
+			bk.SetCoins(ctx, sdk.AccAddress(valAddrVal), sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(100000000000))))
+
+			sk.SetValidator(ctx, testVal)
+
+			_, found := sk.GetValidator(ctx, valAddrVal)
+			
+			if found {
+				k.distKeeper.SetDelegatorStartingInfo(ctx, valAddrVal, TestDelegator, dist.NewDelegatorStartingInfo(0, sdk.NewDec(0), 1))
+				//new delegation
+				delegationVal := staking.NewDelegation(TestDelegator, valAddrVal, sdk.NewDec(1000))
+				sk.SetDelegation(ctx, delegationVal)
+				fmt.Println(delegationVal)
+				
+				//set validator's rewards
+				validatorRewards := dist.ValidatorCurrentRewards{Rewards: sdk.NewDecCoins(sdk.NewDecCoinFromDec("stake", reward))}
+				
+				//trying to inizialize the validatorHistoricalReward
+				//ReferenceCount?
+				valHistrewards := dist.NewValidatorHistoricalRewards(validatorRewards.Rewards, uint16(1))
+				dist.Keeper.SetValidatorHistoricalRewards(k.distKeeper, ctx, valAddrVal, validatorRewards.Period, valHistrewards)
+				
+				k.distKeeper.SetValidatorCurrentRewards(ctx, valAddrVal, validatorRewards)
+
+				//outstandingRewards 
+				validatorOutstandingRewards := sdk.NewDecCoins(sdk.NewDecCoinFromDec("stake", reward))
+				k.distKeeper.SetValidatorOutstandingRewards(ctx, valAddrVal, validatorOutstandingRewards)
+				
+				//set comissions
+				k.distKeeper.SetValidatorAccumulatedCommission(ctx, valAddrVal, sdk.NewDecCoins(sdk.NewDecCoinFromDec("stake", commision)))
+				//delegation rewards
+				dist.NewDelegationDelegatorReward(valAddrVal, k.distKeeper.GetValidatorCurrentRewards(ctx, valAddrVal).Rewards)
+				
+				//execute the keeper method to test
+				err := k.WithdrawAllRewards(ctx,sk)
+
+				require.Nil(t, err)
+			}
+		})
+
+	}
+}
+*/
+
+func TestKeeper_GetRewardRate(t *testing.T){
+	_, ctx, k, _, _, _ := SetupTestInput(true)
+	store := ctx.KVStore(k.storeKey)
+
+	store.Set([]byte(types.RewardRateKey), k.cdc.MustMarshalBinaryBare(TestRewarRate))
+
+	actual := k.GetRewardRate(ctx)
+	
+	require.Equal(t, TestRewarRate, actual)
+}
+
+func TestKeeper_SetRewardRate(t *testing.T){
+	_, ctx, k, _, _, _ := SetupTestInput(true)
+	store := ctx.KVStore(k.storeKey)
+
+	k.SetRewardRate(ctx, TestRewarRate)
+
+	var actual sdk.Dec
+	k.cdc.MustUnmarshalBinaryBare(store.Get([]byte(types.RewardRateKey)), &actual)
+
+	require.Equal(t, TestRewarRate, actual)
+}
+
+func TestKeeper_GetAutomaticWithdraw(t *testing.T){
+	_, ctx, k, _, _, _ := SetupTestInput(true)
+
+	var autoWithdraw bool
+	store := ctx.KVStore(k.storeKey)
+	store.Set([]byte(types.AutomaticWithdraw), k.cdc.MustMarshalBinaryBare(autoWithdraw))
+
+	actual := k.GetAutomaticWithdraw(ctx)
+
+	require.Equal(t, autoWithdraw, actual)
+}
+
+func TestKeeper_SetAutomaticWithdraw(t *testing.T){
+	_, ctx, k, _, _, _ := SetupTestInput(true)
+
+	var autoWithdraw bool
+
+	error := k.SetAutomaticWithdraw(ctx, autoWithdraw)
+	
+	require.Nil(t, error)
+
+	store := ctx.KVStore(k.storeKey)
+	var actual bool
+	k.cdc.MustUnmarshalBinaryBare(store.Get([]byte(types.AutomaticWithdraw)), &actual)
+
+	require.Equal(t, autoWithdraw, actual)
+}
+
+func TestKeeper_IsDailyWithdrawBlock(t *testing.T){
+	_, _, k, _, _, _ := SetupTestInput(true)
+
+	var lowHeight int64 = BPD.Int64() - 1
+	lH := k.IsDailyWithdrawBlock(lowHeight)
+	require.False(t, lH)
+
+	var incorrectHeight int64 = BPD.Int64() + 1
+	iH := k.IsDailyWithdrawBlock(incorrectHeight)
+	require.False(t, iH)
+
+	var rightHeight int64 = BPD.Int64()
+	rH := k.IsDailyWithdrawBlock(rightHeight)
+	require.True(t, rH)
+
+	var zeroHeight int64 = 0
+	zH := k.IsDailyWithdrawBlock(zeroHeight)
+	require.False(t, zH)
+	
 }
