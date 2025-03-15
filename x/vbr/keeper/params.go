@@ -5,13 +5,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// GetParams returns the total set params
+// GetParamSet returns the total set params
 func (k Keeper) GetParamSet(ctx sdk.Context) (params types.Params) {
 	k.paramSpace.GetParamSet(ctx, &params)
 	return params
 }
 
-// SetParams sets the total set of params
+// SetParamSet sets the total set of params
 func (k Keeper) SetParamSet(ctx sdk.Context, params types.Params) error {
 	if err := params.Validate(); err != nil {
 		return err

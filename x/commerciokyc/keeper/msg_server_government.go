@@ -10,7 +10,7 @@ import (
 	sdkErr "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// AddTrustedServiceProvider allows to add the given signer as a trusted entity
+// AddTsp allows to add the given signer as a trusted entity
 // that can sign transactions setting an accrediter for a user.
 func (k msgServer) AddTsp(goCtx context.Context, msg *types.MsgAddTsp) (*types.MsgAddTspResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)

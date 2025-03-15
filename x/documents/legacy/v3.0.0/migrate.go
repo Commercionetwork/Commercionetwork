@@ -68,7 +68,7 @@ func fromSliceOfAddrToSliceOfString(Addresses []sdk.AccAddress) []string {
 	return strings
 }
 
-// migrateDocuments migrates a single v2.2.0 document into a 3.0.0 document
+// migrateDocument migrates a single v2.2.0 document into a 3.0.0 document
 func migrateDocument(doc v220docs.Document) *types.Document {
 	// Convert the metadata schemes
 	var documentMetadataSchema *types.DocumentMetadataSchema
@@ -134,7 +134,7 @@ func migrateDocument(doc v220docs.Document) *types.Document {
 	}
 }
 
-// migrateReceipts migrates a v2.2.0 document receipt into a v3.0.0 document receipt
+// migrateReceipt migrates a v2.2.0 document receipt into a v3.0.0 document receipt
 func migrateReceipt(receipt v220docs.DocumentReceipt) *types.DocumentReceipt {
 	return &types.DocumentReceipt{
 		UUID:         receipt.UUID,
